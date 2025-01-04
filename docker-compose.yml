@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  weather-server:
+    build:
+      context: ./weather-server
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+  llm-client:
+    build:
+      context: ./llm-client
+      dockerfile: Dockerfile
+    depends_on:
+      - weather-server
+      - ollama
+    environment:
+      - WEATHER_SERVER_HOST=weather-server
+      - WEATHER_SERVER_PORT=8080
+      - OLLAMA_HOST=ollama
+      - OLLAMA_PORT=11434
+
+volumes:
+  ollama_data:
