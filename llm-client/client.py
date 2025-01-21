@@ -1,16 +1,17 @@
 import os
 import asyncio
-from typing import List
+from typing import List, Tuple
 from ollama import chat
 from typing import Optional
 from contextlib import AsyncExitStack
-
-
+from dotenv import load_dotenv, find_dotenv
+from mcp.client.sse import sse_client
 from mcp import ClientSession
 
+load_dotenv(find_dotenv())
 
 class OllamaClient:
-    def __init__(self, model: str = "llama3.2:1b", base_url: str = "http://ollama:11434"):
+    def __init__(self, model: str = "llama3.2", base_url: str = "http://ollama:11435"):
         self.model = model
         self.base_url = base_url
 
@@ -19,7 +20,6 @@ class OllamaClient:
             model=self.model,
             tools=tools,
             messages=messages,
-            base_url=self.base_url
         )
         return stream
 
@@ -35,18 +35,17 @@ def ollama_tool_conversion(tool):
     }
 
 class MCPClient:
-    def __init__(self, llm: OllamaClient, session: Optional[ClientSession] = None):
-        self.session = session
+    def __init__(self, llm: OllamaClient):
         self.llm = llm
         self.exit_stack = AsyncExitStack()
 
     async def connect_to_server(self, host: str = "localhost", port: int = 8080):
-        reader, writer = await asyncio.open_connection(host, port)
-        self.stdio = reader
-        self.write = writer
+        url = f"http://{host}:{port}/sse"
 
+        sse_transport = await self.exit_stack.enter_async_context(sse_client(url))
+        reader, writer = sse_transport
         self.session = await self.exit_stack.enter_async_context(
-            ClientSession(self.stdio, self.write)
+            ClientSession(reader, writer)
         )
 
         await self.session.initialize()
@@ -115,7 +114,6 @@ class MCPClient:
 
     async def cleanup(self):
         await self.exit_stack.aclose()
-
 
 async def main():
     ollama_host = os.environ["OLLAMA_HOST"]

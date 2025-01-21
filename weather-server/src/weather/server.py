@@ -1,53 +1,20 @@
+import logging
 from typing import Any
 import asyncio
 import httpx
 import signal
 from mcp.server.models import InitializationOptions
 import mcp.types as types
-from mcp.server import NotificationOptions, Server
+from mcp.server import NotificationOptions
 import mcp.server.stdio
+
+from mcp.server.fastmcp import FastMCP
 
 NWS_API_BASE = "https://api.weather.gov"
 USER_AGENT = "weather-app/1.0"
 
-server = Server("weather")
+server = FastMCP("weather")
 
-@server.list_tools()
-async def handle_list_tools() -> list[types.Tool]:
-    return [
-        types.Tool(
-            name="get-alerts",
-            description="Get weather alerts for a state",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "state": {
-                        "type": "string",
-                        "description": "Two-letter state code (e.g. CA, NY)",
-                    }
-                },
-                "required": ["state"],
-            },
-        ),
-        types.Tool(
-            name="get-forecast",
-            description="Get the weather forecast for a location",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "latitude": {
-                        "type": "number",
-                        "description": "Latitude",
-                    },
-                    "longitude": {
-                        "type": "number",
-                        "description": "Longitude",
-                    }
-                },
-                "required": ["latitude", "longitude"],
-            },
-        )
-    ]
 
 async def make_nws_request(client: httpx.AsyncClient, url: str) -> dict[str, Any]:
     headers = {
@@ -74,128 +41,85 @@ def format_alert(feature: dict) -> str:
         "---"
     )
 
-@server.call_tool()
-async def handle_call_tool(
-    name: str,
-    arguments: dict[str, Any] | None,
-) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
-    if name == "get-alerts":
-        state = arguments.get("state")
-        if not state:
-            raise ValueError("Missing state parameter")
+@server.tool()
+async def get_alerts(state: str) -> str:
+    state = state.upper()
+    if len(state) != 2:
+        raise ValueError("State must be a two-letter code")
 
-        state = state.upper()
-        if len(state) != 2:
-            raise ValueError("State must be a two-letter code")
+    async with httpx.AsyncClient() as client:
+        alerts_url = f"{NWS_API_BASE}/alerts/active?area={state}"
+        alerts_data = await make_nws_request(client, alerts_url)
 
-        async with httpx.AsyncClient() as client:
-            alerts_url = f"{NWS_API_BASE}/alerts/active?area={state}"
-            alerts_data = await make_nws_request(client, alerts_url)
+        if not alerts_data:
+            return [types.TextContent(type="text", text="Failed to fetch alerts")]
 
-            if not alerts_data:
-                return [types.TextContent(type="text", text="Failed to fetch alerts")]
+        features = alerts_data.get("features", [])
+        if not features:
+            return [types.TextContent(type="text", text=f"No active alerts found for {state}")]
 
-            features = alerts_data.get("features", [])
-            if not features:
-                return [types.TextContent(type="text", text=f"No active alerts found for {state}")]
+        formatted_alerts = [format_alert(feature) for feature in features[:20]]
+        alert_texts = f"Active alerts for {state}:\n\n" + "\n".join(formatted_alerts)
 
-            formatted_alerts = [format_alert(feature) for feature in features[:20]]
-            alert_texts = f"Active alerts for {state}:\n\n" + "\n".join(formatted_alerts)
-
-        return [
-            types.TextContent(type="text", text=alert_texts)
-        ]
-    elif name == "get-forecast":
-        try:
-            latitude = float(arguments.get("latitude"))
-            longitude = float(arguments.get("longitude"))
-        except (TypeError, ValueError):
-            return [types.TextContent(
-                type="text",
-                text="Invalid latitude or longitude",
-            )]
-
-        if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
-            return [types.TextContent(
-                type="text",
-                text="Latitude must be between -90 and 90, and longitude must be between -180 and 180",
-            )]
-
-        async with httpx.AsyncClient() as client:
-            lat_str = f"{latitude}"
-            lon_str = f"{longitude}"
-
-            points_url = f"{NWS_API_BASE}/points/{lat_str},{lon_str}"
-            points_data = await make_nws_request(client, points_url)
-
-            if not points_data:
-                return [types.TextContent(type="text", text="Failed to fetch forecast")]
-
-            properties = points_data.get("properties", {})
-            forecast_url = properties.get("forecast")
-
-            if not forecast_url:
-                return [types.TextContent(type="text", text="Failed to get forecast URL from grid point data")]
-
-            forecast_data = await make_nws_request(client, forecast_url)
-
-            if not forecast_data:
-                return [types.TextContent(type="text", text="Failed to fetch forecast")]
-
-            periods = forecast_data.get("properties", {}).get("periods", [])
-            if not periods:
-                return [types.TextContent(type="text", text="No forecast periods found")]
-
-            formatted_forecast = []
-            for period in periods:
-                forecast_text = (
-                    f"{period.get('name', 'Unknown')}:\n"
-                    f"Temperature: {period.get('temperature', 'Unknown')}°{period.get('temperatureUnit', 'F')}\n"
-                    f"Wind: {period.get('windSpeed', 'Unknown')} {period.get('windDirection', 'Unknown')}\n"
-                    f"{period.get('shortForecast', 'Unknown')}\n"
-                    "---"
-                )
-                formatted_forecast.append(forecast_text)
-
-            forecast_text = f"Forecast for {latitude}, {longitude}:\n\n" + "\n".join(formatted_forecast)
-            return [types.TextContent(
-                type="text",
-                text=forecast_text,
-            )]
-    else:
-        raise ValueError(f"Unknown tool: {name}")
+    return [
+        types.TextContent(type="text", text=alert_texts)
+    ]
 
 
-async def shutdown(sig):
-    tasks = [t for t in asyncio.all_tasks() if not asyncio.current_task()]
-    for task in tasks:
-        task.cancel()
+@server.tool()
+async def get_forecast(latitude: float, longitude: float) -> str:
+    if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
+        return [types.TextContent(
+            type="text",
+            text="Latitude must be between -90 and 90, and longitude must be between -180 and 180",
+        )]
 
-    await asyncio.gather(*tasks, return_exceptions=True)
-    loop = asyncio.get_running_loop()
-    loop.stop()
+    async with httpx.AsyncClient() as client:
+        lat_str = f"{latitude}"
+        lon_str = f"{longitude}"
 
+        points_url = f"{NWS_API_BASE}/points/{lat_str},{lon_str}"
+        points_data = await make_nws_request(client, points_url)
 
-async def main():
-    loop = asyncio.get_running_loop()
-    for sig in (signal.SIGTERM, signal.SIGINT):
-        loop.add_signal_handler(sig, lambda s=sig: asyncio.create_task(shutdown(s)))
+        if not points_data:
+            return [types.TextContent(type="text", text="Failed to fetch forecast")]
 
-    async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
-        await server.run(
-            read_stream,
-            write_stream,
-            InitializationOptions(
-                server_name="weather",
-                server_version="0.1.0",
-                capabilities=server.get_capabilities(
-                    notification_options=NotificationOptions(),
-                    experimental_capabilities={},
-                ),
-            ),
-            raise_exceptions=True,
-        )
+        properties = points_data.get("properties", {})
+        forecast_url = properties.get("forecast")
+
+        if not forecast_url:
+            return [types.TextContent(type="text", text="Failed to get forecast URL from grid point data")]
+
+        forecast_data = await make_nws_request(client, forecast_url)
+
+        if not forecast_data:
+            return [types.TextContent(type="text", text="Failed to fetch forecast")]
+
+        periods = forecast_data.get("properties", {}).get("periods", [])
+        if not periods:
+            return [types.TextContent(type="text", text="No forecast periods found")]
+
+        formatted_forecast = []
+        for period in periods:
+            forecast_text = (
+                f"{period.get('name', 'Unknown')}:\n"
+                f"Temperature: {period.get('temperature', 'Unknown')}°{period.get('temperatureUnit', 'F')}\n"
+                f"Wind: {period.get('windSpeed', 'Unknown')} {period.get('windDirection', 'Unknown')}\n"
+                f"{period.get('shortForecast', 'Unknown')}\n"
+                "---"
+            )
+            formatted_forecast.append(forecast_text)
+
+        forecast_text = f"Forecast for {latitude}, {longitude}:\n\n" + "\n".join(formatted_forecast)
+        return [types.TextContent(
+            type="text",
+            text=forecast_text,
+        )]
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    logging.basicConfig(level=logging.DEBUG)
+    logging.debug("Running Main")
+    print(asyncio.run(server.list_tools()))
+    server.run(transport="sse")
+    logging.debug("Finished Main")
