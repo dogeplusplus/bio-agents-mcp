@@ -1,10 +1,12 @@
 services:
-  weather-server:
+  pdb-server:
     build:
-      context: ./weather-server
+      context: ./protein-data-bank
       dockerfile: Dockerfile
+    env_file:
+      - .env
     ports:
-      - "8000:8000"
+      - "8080:8080"
 
   ollama:
     image: ollama/ollama:latest
