@@ -1,17 +1,20 @@
 import asyncio
-import os
 from contextlib import AsyncExitStack
 from typing import List, Optional
 
 from dotenv import find_dotenv, load_dotenv
+from hydra import compose, initialize
 from mcp import ClientSession
 from mcp.client.sse import sse_client
 from ollama import chat
 
+
+# Load environment variables from .env file
 load_dotenv(find_dotenv())
 
+
 class OllamaClient:
-    def __init__(self, model: str = "llama3.2", base_url: str = "http://ollama:11435"):
+    def __init__(self, model: str, base_url: str):
         self.model = model
         self.base_url = base_url
 
@@ -39,11 +42,7 @@ class MCPClient:
         self.llm = llm
         self.exit_stack = AsyncExitStack()
 
-    # async def authorize(self):
-    #     response = await self.session.call_tool("authorize", {})
-    #     input(f"Authorize application: {response.content}")
-
-    async def connect_to_server(self, host: str = "localhost", port: int = 8080):
+    async def connect_to_server(self, host: str, port: int):
         self.server_host = host
         self.server_port = port
         url = f"http://{host}:{port}/sse"
@@ -119,20 +118,17 @@ class MCPClient:
         await self.exit_stack.aclose()
 
 async def main():
-    ollama_host = os.environ["OLLAMA_HOST"]
-    ollama_port = os.environ["OLLAMA_PORT"]
+    initialize(config_path="conf")
+    cfg = compose(config_name="config")
 
     llm = OllamaClient(
-        model="qwen2.5:14b",
-        base_url=f"http://{ollama_host}:{ollama_port}"
+        model=cfg.ollama.model,
+        base_url=cfg.ollama.base_url
     )
     client = MCPClient(llm)
 
-    mcp_host = os.environ["MCP_SERVER_HOST"]
-    mcp_port = os.environ["MCP_SERVER_PORT"]
-
     try:
-        await client.connect_to_server(mcp_host, mcp_port)
+        await client.connect_to_server(cfg.mcp.server_host, cfg.mcp.server_port)
         await client.chat_loop()
     finally:
         await client.cleanup()
