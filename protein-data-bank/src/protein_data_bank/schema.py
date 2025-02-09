@@ -1,37 +1,64 @@
-from typing import List, Callable
+from typing import List
 
 from mcp import types
 from protein_data_bank.utils import fetch_data
 
 
-async def fetch_schema(api_suffix: str) -> List[types.TextContent]:
-    result = await fetch_data(api_suffix)
-    return result
+async def assembly_schema() -> List[types.TextContent]:
+    api_suffix = "/schema/assembly"
+    return await fetch_data(api_suffix)
 
 
-schemas = [
-    "assembly",
-    "branched_entity_instance",
-    "branched_entity",
-    "chem_comp",
-    "drugbank",
-    "entry",
-    "nonpolymer_entity_instance",
-    "nonpolymer_entity",
-    "polymer_entity_instance",
-    "polymer_entity",
-    "pubmed",
-    "uniprot",
-]
+async def branched_entity_instance_schema() -> List[types.TextContent]:
+    api_suffix = "/schema/branched_entity_instance"
+    return await fetch_data(api_suffix)
 
 
-def create_schema_function(schema_name: str) -> Callable[[], List[types.TextContent]]:
-    async def schema_function() -> List[types.TextContent]:
-        api_suffix = f"/schema/{schema_name}"
-        return await fetch_schema(api_suffix)
-
-    return schema_function
+async def branched_entity_schema() -> List[types.TextContent]:
+    api_suffix = "/schema/branched_entity"
+    return await fetch_data(api_suffix)
 
 
-for schema in schemas:
-    globals()[f"{schema}_schema"] = create_schema_function(schema)
+async def chem_comp_schema() -> List[types.TextContent]:
+    api_suffix = "/schema/chem_comp"
+    return await fetch_data(api_suffix)
+
+
+async def drugbank_schema() -> List[types.TextContent]:
+    api_suffix = "/schema/drugbank"
+    return await fetch_data(api_suffix)
+
+
+async def entry_schema() -> List[types.TextContent]:
+    api_suffix = "/schema/entry"
+    return await fetch_data(api_suffix)
+
+
+async def nonpolymer_entity_instance_schema() -> List[types.TextContent]:
+    api_suffix = "/schema/nonpolymer_entity_instance"
+    return await fetch_data(api_suffix)
+
+
+async def nonpolymer_entity_schema() -> List[types.TextContent]:
+    api_suffix = "/schema/nonpolymer_entity"
+    return await fetch_data(api_suffix)
+
+
+async def polymer_entity_instance_schema() -> List[types.TextContent]:
+    api_suffix = "/schema/polymer_entity_instance"
+    return await fetch_data(api_suffix)
+
+
+async def polymer_entity_schema() -> List[types.TextContent]:
+    api_suffix = "/schema/polymer_entity"
+    return await fetch_data(api_suffix)
+
+
+async def pubmed_schema() -> List[types.TextContent]:
+    api_suffix = "/schema/pubmed"
+    return await fetch_data(api_suffix)
+
+
+async def uniprot_schema() -> List[types.TextContent]:
+    api_suffix = "/schema/uniprot"
+    return await fetch_data(api_suffix)

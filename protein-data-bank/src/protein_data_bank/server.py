@@ -25,6 +25,30 @@ from protein_data_bank.groups import (
     pdb_cluster_data_aggregation_method,
 )
 from protein_data_bank.interface import pairwise_polymeric_interface_description
+from protein_data_bank.schema import (
+    assembly_schema,
+    branched_entity_instance_schema,
+    branched_entity_schema,
+    chem_comp_schema,
+    drugbank_schema,
+    entry_schema,
+    nonpolymer_entity_instance_schema,
+    nonpolymer_entity_schema,
+    polymer_entity_instance_schema,
+    polymer_entity_schema,
+    pubmed_schema,
+    uniprot_schema,
+)
+from protein_data_bank.repository_holdings import (
+    current_entry_ids,
+    structure_status,
+    structure_list_status,
+    removed_structure_description,
+    removed_entry_ids,
+    unreleased_structures,
+    unreleased_structure_processing,
+    unreleased_entry_ids,
+)
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -48,6 +72,28 @@ tools = [
     pdb_cluster_data_aggregation,
     pdb_cluster_data_aggregation_method,
     pairwise_polymeric_interface_description,
+    # Schema endpoints
+    assembly_schema,
+    branched_entity_instance_schema,
+    branched_entity_schema,
+    chem_comp_schema,
+    drugbank_schema,
+    entry_schema,
+    nonpolymer_entity_instance_schema,
+    nonpolymer_entity_schema,
+    polymer_entity_instance_schema,
+    polymer_entity_schema,
+    pubmed_schema,
+    uniprot_schema,
+    # Repository holdings endpoints
+    current_entry_ids,
+    structure_status,
+    structure_list_status,
+    removed_structure_description,
+    removed_entry_ids,
+    unreleased_structures,
+    unreleased_structure_processing,
+    unreleased_entry_ids,
 ]
 
 for tool in tools:
