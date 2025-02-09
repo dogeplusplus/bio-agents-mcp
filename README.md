@@ -1,4 +1,4 @@
-# Model Context Protocol Example
+# bio-agents-mcp
 
 ## Description
 

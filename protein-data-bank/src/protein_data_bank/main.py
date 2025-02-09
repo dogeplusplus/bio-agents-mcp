@@ -1,4 +1,4 @@
-from protein_data_bank.server import mcp
+from protein_data_bank.server import mcp_server
 
 if __name__ == "__main__":
-    mcp.run(transport="sse")
+    mcp_server.run(transport="sse")
