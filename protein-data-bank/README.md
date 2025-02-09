@@ -73,3 +73,75 @@ A Dockerfile is provided to build a Docker image for the server.
 - **Endpoint:** `/assembly/{entry_id}/{assembly_id}`
 - **Method:** GET
 - **Description:** Fetches the structural assembly description for the given entry ID and assembly ID from the PDB API.
+
+### Get Chemical Component
+
+- **Endpoint:** `/chemcomp/{comp_id}`
+- **Method:** GET
+- **Description:** Fetches the chemical component for the given component ID from the PDB API.
+
+### Get DrugBank Annotations
+
+- **Endpoint:** `/drugbank/{comp_id}`
+- **Method:** GET
+- **Description:** Fetches the DrugBank annotations for the given component ID from the PDB API.
+
+### Get Branched Entity
+
+- **Endpoint:** `/branched_entity/{entry_id}/{entity_id}`
+- **Method:** GET
+- **Description:** Fetches the branched entity for the given entry ID and entity ID from the PDB API.
+
+### Get Non-Polymer Entity
+
+- **Endpoint:** `/non_polymer_entity/{entry_id}/{entity_id}`
+- **Method:** GET
+- **Description:** Fetches the non-polymer entity for the given entry ID and entity ID from the PDB API.
+
+### Get Polymer Entity
+
+- **Endpoint:** `/polymer_entity/{entry_id}/{entity_id}`
+- **Method:** GET
+- **Description:** Fetches the polymer entity for the given entry ID and entity ID from the PDB API.
+
+### Get UniProt Annotations
+
+- **Endpoint:** `/uniprot/{entry_id}/{entity_id}`
+- **Method:** GET
+- **Description:** Fetches the UniProt annotations for the given entry ID and entity ID from the PDB API.
+
+### Get Structure
+
+- **Endpoint:** `/entry/{entry_id}`
+- **Method:** GET
+- **Description:** Fetches the structure for the given entry ID from the PDB API.
+
+### Get PubMed Annotations
+
+- **Endpoint:** `/pubmed/{entry_id}`
+- **Method:** GET
+- **Description:** Fetches the PubMed annotations for the given entry ID from the PDB API.
+
+### Get PDB Cluster Data Aggregation
+
+- **Endpoint:** `/entry_groups/{group_id}`
+- **Method:** GET
+- **Description:** Fetches the PDB cluster data aggregation for the given group ID from the PDB API.
+
+### Get Aggregation Group Provenance
+
+- **Endpoint:** `/group_provenance/{group_provenance_id}`
+- **Method:** GET
+- **Description:** Fetches the aggregation group provenance for the given group provenance ID from the PDB API.
+
+### Get PDB Cluster Data Aggregation Method
+
+- **Endpoint:** `/polymer_entity_groups/{group_id}`
+- **Method:** GET
+- **Description:** Fetches the PDB cluster data aggregation method for the given group ID from the PDB API.
+
+### Get Pairwise Polymeric Interface Description
+
+- **Endpoint:** `/interface/{entry_id}/{assembly_id}/{interface_id}`
+- **Method:** GET
+- **Description:** Fetches the pairwise polymeric interface description for the given entry ID, assembly ID, and interface ID from the PDB API.
