@@ -1,7 +1,7 @@
 from typing import List
 
 from mcp import types
-from protein_data_bank.utils import fetch_data
+from protein_data_bank_mcp.utils import fetch_data
 
 
 async def structural_assembly_description(

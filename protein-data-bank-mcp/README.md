@@ -2,7 +2,7 @@
 
 ## Description
 
-The `protein_data_bank` module provides a server that interacts with the Protein Data Bank (PDB) API to fetch structural assembly descriptions. It is built using the FastMCP framework and supports asynchronous operations with `aiohttp`.
+The `protein_data_bank_mcp` module provides a server that interacts with the Protein Data Bank (PDB) API to fetch structural assembly descriptions. It is built using the FastMCP framework and supports asynchronous operations with `aiohttp`.
 
 ## Features
 
@@ -47,7 +47,7 @@ pdb_api_url: "https://data.rcsb.org/rest/v1/core"
 
 To start the server, run the following command:
 ```sh
-python src/protein_data_bank/server.py
+python src/protein_data_bank_mcp/server.py
 ```
 
 The server will start and listen on the configured port (default: 8080).

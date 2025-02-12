@@ -3,7 +3,7 @@ import aiohttp
 from typing import List
 from mcp import types
 
-from protein_data_bank.constants import PDB_API_URL
+from protein_data_bank_mcp.constants import PDB_API_URL
 
 
 async def fetch_data(api_suffix: str) -> List[types.TextContent]:

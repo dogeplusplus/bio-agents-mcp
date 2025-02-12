@@ -1,5 +1,5 @@
 [project]
-name = "protein_data_bank"
+name = "protein_data_bank_mcp"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -17,4 +17,4 @@ requires = [ "hatchling",]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.target.sdist.force-include]
-"server.py" = "src/protein_data_bank/server.py"
+"server.py" = "src/protein_data_bank_mcp/server.py"

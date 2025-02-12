@@ -14,7 +14,7 @@ For more details, refer to the [LLM Client README](llm-client/README.md).
 
 ### Protein Data Bank
 
-The `protein_data_bank` module provides a server that interacts with the Protein Data Bank (PDB) API to fetch structural assembly descriptions, chemical components, drugbank annotations, branched entities, non-polymer entities, polymer entities, uniprot annotations, structures, pubmed annotations, pdb cluster data aggregation, aggregation group provenance, pdb cluster data aggregation method, and pairwise polymeric interface descriptions. It is built using the FastMCP framework and supports asynchronous operations with `aiohttp`.
+The `protein_data_bank_mcp` module provides a server that interacts with the Protein Data Bank (PDB) API to fetch structural assembly descriptions, chemical components, drugbank annotations, branched entities, non-polymer entities, polymer entities, uniprot annotations, structures, pubmed annotations, pdb cluster data aggregation, aggregation group provenance, pdb cluster data aggregation method, and pairwise polymeric interface descriptions. It is built using the FastMCP framework and supports asynchronous operations with `aiohttp`.
 
 For more details, refer to the [Protein Data Bank README](protein-data-bank/README.md).
 

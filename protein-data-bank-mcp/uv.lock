@@ -369,7 +369,7 @@ wheels = [
 ]
 
 [[package]]
-name = "protein-data-bank"
+name = "protein-data-bank-mcp"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
