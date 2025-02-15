@@ -11,4 +11,5 @@ dependencies = [
     "requests>=2.32.3",
     "hydra-core>=1.2.0",
     "python-dotenv>=1.0.1",
+    "chainlit>=2.2.1",
 ]

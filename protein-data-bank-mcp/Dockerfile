@@ -21,4 +21,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 EXPOSE 8080
 
 # Reset the entrypoint, don't invoke `uv`
-ENTRYPOINT ["python", "src/protein_data_bank/main.py"]
+ENTRYPOINT ["python", "src/protein_data_bank_mcp/main.py"]

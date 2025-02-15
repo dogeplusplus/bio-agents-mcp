@@ -1,7 +1,8 @@
+import os
 import logging
 
+from dotenv import load_dotenv, find_dotenv
 from mcp.server import FastMCP
-from protein_data_bank_mcp.constants import MCP_SERVER_PORT
 from protein_data_bank_mcp.assembly import structural_assembly_description
 from protein_data_bank_mcp.chemical_component import (
     chemical_component,
@@ -53,7 +54,10 @@ from protein_data_bank_mcp.repository_holdings import (
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-mcp_server = FastMCP("protein-data-bank", port=MCP_SERVER_PORT)
+load_dotenv(find_dotenv())
+
+mcp_server = FastMCP(os.environ["PDB_MCP_HOST"],
+                     port=os.environ["PDB_MCP_PORT"])
 
 tools = [
     structural_assembly_description,

@@ -2,5 +2,10 @@ ollama:
   model: "qwen2.5:14b"
   base_url: "http://${oc.env:OLLAMA_HOST}:${oc.env:OLLAMA_PORT}"
 mcp:
-  server_host: ${oc.env:MCP_SERVER_HOST}
-  server_port: ${oc.env:MCP_SERVER_PORT}
+  servers:
+    pdb:
+      host: ${oc.env:PDB_MCP_HOST}
+      port: ${oc.env:PDB_MCP_PORT}
+    chembl:
+      host: ${oc.env:CHEMBL_MCP_HOST}
+      port: ${oc.env:CHEMBL_MCP_PORT}

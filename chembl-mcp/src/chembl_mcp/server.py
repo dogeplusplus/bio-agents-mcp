@@ -1,12 +1,16 @@
+import os
 import logging
+from dotenv import load_dotenv, find_dotenv
 
 from mcp.server import FastMCP
-from chembl_mcp.constants import MCP_SERVER_PORT
+
+load_dotenv(find_dotenv())
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-mcp_server = FastMCP("protein-data-bank-mcp", port=MCP_SERVER_PORT)
+mcp_server = FastMCP(os.environ["CHEMBL_MCP_HOST"],
+                     port=os.environ["CHEMBL_MCP_PORT"])
 
 tools = [
 ]

@@ -18,7 +18,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-EXPOSE 8080
+EXPOSE 8081
 
 # Reset the entrypoint, don't invoke `uv`
 ENTRYPOINT ["python", "src/chembl_mcp/main.py"]

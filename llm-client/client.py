@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from contextlib import AsyncExitStack
 from typing import List, Optional
 
@@ -8,6 +9,8 @@ from mcp import ClientSession
 from mcp.client.sse import sse_client
 from ollama import chat
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 # Load environment variables from .env file
 load_dotenv(find_dotenv())
@@ -34,52 +37,76 @@ def ollama_tool_conversion(tool):
             "name": tool["name"],
             "description": tool["description"],
             "parameters": tool["input_schema"],
-        }
+        },
     }
+
 
 class MCPClient:
     def __init__(self, llm: OllamaClient):
         self.llm = llm
         self.exit_stack = AsyncExitStack()
+        self.sessions = {}
+        self.available_tools = []
 
-    async def connect_to_server(self, host: str, port: int):
-        self.server_host = host
-        self.server_port = port
-        url = f"http://{host}:{port}/sse"
+    async def connect_to_servers(self, servers_config: dict):
+        for server_name, config in servers_config.items():
+            host = config["host"]
+            port = config["port"]
+            url = f"http://{host}:{port}/sse"
 
-        sse_transport = await self.exit_stack.enter_async_context(sse_client(url))
-        reader, writer = sse_transport
-        self.session = await self.exit_stack.enter_async_context(
-            ClientSession(reader, writer)
-        )
+            sse_transport = await self.exit_stack.enter_async_context(sse_client(url))
+            reader, writer = sse_transport
+            session = await self.exit_stack.enter_async_context(
+                ClientSession(reader, writer)
+            )
 
-        await self.session.initialize()
+            await session.initialize()
+            self.sessions[server_name] = session
 
-        response = await self.session.list_tools()
-        available_tools = [
-            {
-                "name": tool.name,
-                "description": tool.description,
-                "input_schema": tool.inputSchema,
-            }
-            for tool in response.tools
-        ]
+            response = await session.list_tools()
+            server_tools = [
+                {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "input_schema": tool.inputSchema,
+                }
+                for tool in response.tools
+            ]
+            self.available_tools.extend(server_tools)
 
-        self.available_tools = available_tools
-
-    async def process_query(self, query: str):
+    async def process_query(self, query: str, history: List[str] = []):
         messages = [
             {
-                "role": "user",
-                "content": query,
+                "role": "system",
+                "content": "The following is the history of the conversation:",
             },
         ]
 
+        for message in history:
+            messages.append(
+                {"role": message["role"], "content": message["content"]})
+
+        messages.extend(
+            [
+                {
+                    "role": "system",
+                    "content": """
+                    You have access to certain tools in the protein data bank,
+                    and Chembl. Using the data from the tools, use the API tools
+                    to extract the relevant information. If the user is not specific
+                    enough like not providing the assembly number, you can just
+                    set it to a sensible default value based on the tool.
+                    """,
+                },
+                {
+                    "role": "user",
+                    "content": query,
+                },
+            ]
+        )
+
         tools = [ollama_tool_conversion(tool) for tool in self.available_tools]
         response = self.llm.send_message(messages, tools=tools)
-
-        tool_results = []
-        final_text = []
 
         message = response.message
         if message.tool_calls:
@@ -88,17 +115,22 @@ class MCPClient:
                 tool_name = function.name
                 tool_args = function.arguments
 
-                result = await self.session.call_tool(tool_name, tool_args)
-                tool_results.append({"call": tool_name, "result": result})
-                final_text.append(f"[Calling tool {tool_name} with args {tool_args}]")
-                messages.append({"role": "system", "content": result.content[0].text[:10000]})
+                # Try each session until we find one that has the tool
+                for session in self.sessions.values():
+                    result = await session.call_tool(tool_name, tool_args)
+                    messages.append(
+                        {"role": "system",
+                            "content": result.content[0].text[:10000]}
+                    )
 
-            messages.append({"role": "system", "content": "Use the API outputs to create the response."})
-            response = self.llm.send_message(messages)
-            final_text.append(response.message.content)
-        else:
-            final_text.append(message.content)
-        return "\n".join(final_text)
+        messages.append(
+            {
+                "role": "system",
+                "content": "Use the context above to continue the conversation.",
+            },
+        )
+        response = self.llm.send_message(messages)
+        return response.message.content
 
     async def chat_loop(self):
         while True:
@@ -117,21 +149,17 @@ class MCPClient:
     async def cleanup(self):
         await self.exit_stack.aclose()
 
+
 async def main():
     initialize(config_path="conf")
     cfg = compose(config_name="config")
 
-    llm = OllamaClient(
-        model=cfg.ollama.model,
-        base_url=cfg.ollama.base_url
-    )
+    llm = OllamaClient(model=cfg.ollama.model, base_url=cfg.ollama.base_url)
     client = MCPClient(llm)
 
-    try:
-        await client.connect_to_server(cfg.mcp.server_host, cfg.mcp.server_port)
-        await client.chat_loop()
-    finally:
-        await client.cleanup()
+    await client.connect_to_servers(cfg.mcp.servers)
+
+    await client.cleanup()
 
 
 if __name__ == "__main__":
