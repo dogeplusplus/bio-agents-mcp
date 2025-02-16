@@ -1,4 +1,56 @@
-# bio-agents-mcp
+# Bio-Agents MCP
+
+A collection of microservices and clients for natural language interaction with biological databases.
+
+## Components
+
+- **LLM Client**: Natural language interface with web UI and terminal modes
+- **PDB MCP Server**: Protein Data Bank API service
+- **ChEMBL MCP Server**: Chemical database API service
+
+## Architecture
+
+```
+┌─────────────┐     ┌──────────────┐
+│   LLM UI    │     │  Ollama LLM  │
+│  (Chainlit) │     │              │
+└─────┬───────┘     └───────┬──────┘
+      │                     │
+┌─────┴─────────────────────┴──────┐
+│           LLM Client             │
+└─────┬─────────────────────┬──────┘
+      │                     │
+┌─────┴───────┐     ┌──────┴───────┐
+│  PDB MCP    │     │  ChEMBL MCP  │
+│   Server    │     │    Server    │
+└─────────────┘     └──────────────┘
+```
+
+## Quick Start
+
+1. Configure environment:
+```bash
+cp .env.example .env
+```
+
+2. Start services:
+```bash
+make build
+make up
+```
+
+3. Launch web interface:
+```bash
+make run-chainlit
+```
+
+Visit http://localhost:8000 to start querying biological data.
+
+## Development
+
+- Use `make help` to see available commands
+- Each service has its own README with detailed documentation
+- Configuration files are in `conf/` directory
 
 ## Description
 

@@ -156,7 +156,7 @@ async def main():
     client = MCPClient(llm)
 
     await client.connect_to_servers(cfg.mcp.servers)
-
+    await client.chat_loop()
     await client.cleanup()
 
 

@@ -11,6 +11,8 @@ help:
 	@echo "  up             - Start all services using docker-compose"
 	@echo "  down           - Stop all services using docker-compose"
 	@echo "  restart        - Restart all services using docker-compose"
+	@echo "  run-chainlit   - Run the Chainlit UI for the LLM client"
+	@echo "  run-client     - Run the LLM client in terminal mode"
 
 .PHONY: setup-env
 setup-env:
@@ -34,3 +36,13 @@ down:
 
 .PHONY: restart
 restart: down up
+
+.PHONY: run-chainlit
+run-chainlit:
+	@echo "Starting Chainlit UI..."
+	cd llm-client && chainlit run chainlit_ui.py
+
+.PHONY: run-client
+run-client:
+	@echo "Starting LLM client in terminal mode..."
+	cd llm-client && python client.py
