@@ -21,11 +21,12 @@ class OllamaClient:
         self.model = model
         self.base_url = base_url
 
-    def send_message(self, messages: List[str], tools: Optional[list] = None):
+    def send_message(self, messages: List[str], tools: Optional[list] = None, stream: bool = False):
         stream = chat(
             model=self.model,
             tools=tools,
             messages=messages,
+            stream=stream,
         )
         return stream
 
@@ -74,13 +75,14 @@ class MCPClient:
             ]
             self.available_tools.extend(server_tools)
 
-    async def process_query(self, query: str, history: List[str] = []):
+    async def process_query(self, query: str, history: List[str] = []) -> str:
         messages = [
             {
                 "role": "system",
                 "content": "The following is the history of the conversation:",
             },
         ]
+        logger.info(f"History of the conversation: {history}")
 
         for message in history:
             messages.append(
@@ -91,11 +93,10 @@ class MCPClient:
                 {
                     "role": "system",
                     "content": """
-                    You have access to certain tools in the protein data bank,
-                    and Chembl. Using the data from the tools, use the API tools
-                    to extract the relevant information. If the user is not specific
-                    enough like not providing the assembly number, you can just
-                    set it to a sensible default value based on the tool.
+                    You have access to tools for protein data bank and Chembl.
+                    Use the API tools to extract the relevant information.
+                    Fill in missing arguments with sensible values if the user
+                    hasn't provided them such as the assembly_id.
                     """,
                 },
                 {
@@ -117,20 +118,17 @@ class MCPClient:
 
                 # Try each session until we find one that has the tool
                 for session in self.sessions.values():
-                    result = await session.call_tool(tool_name, tool_args)
-                    messages.append(
-                        {"role": "system",
-                            "content": result.content[0].text[:10000]}
-                    )
+                    try:
+                        result = await session.call_tool(tool_name, tool_args)
+                        messages.append(
+                            {"role": "system",
+                                "content": result.content[0].text[:10000]}
+                        )
+                    except Exception as e:
+                        logger.error(f"Error calling tool {tool_name}: {e}")
 
-        messages.append(
-            {
-                "role": "system",
-                "content": "Use the context above to continue the conversation.",
-            },
-        )
-        response = self.llm.send_message(messages)
-        return response.message.content
+        response = self.llm.send_message(messages, stream=True)
+        return response
 
     async def chat_loop(self):
         while True:

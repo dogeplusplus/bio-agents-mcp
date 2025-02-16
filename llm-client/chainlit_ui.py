@@ -17,14 +17,54 @@ llm = OllamaClient(model=cfg.ollama.model, base_url=cfg.ollama.base_url)
 client = MCPClient(llm)
 
 
+@cl.set_chat_profiles
+async def chat_profile(current_user: cl.User):
+    return [
+        cl.ChatProfile(
+            name="Default Profile",
+            icon="https://picsum.photos/250",
+            markdown_description="This is the default profile.",
+            starters=[
+                cl.Starter(
+                    label="PDB Structure",
+                    message="Can you get me the structure for 1HR7 assembly 1?",
+                ),
+                cl.Starter(
+                    label="Pubmed Annotations",
+                    message="Can you get me the pubmed annotations for 7U7N?",
+                ),
+            ],
+        )
+    ]
+
+
+@cl.on_chat_start
+def start_chat():
+    cl.user_session.set(
+        "message_history",
+        [
+            {
+                "role": "system",
+                "content": "You are a helpful assistant that does API calls on various life science databases.",
+            }
+        ],
+    )
+
+
 @cl.on_message
 async def main(message: cl.Message):
-    # Your custom logic goes here...
     await client.connect_to_servers(cfg.mcp.servers)
 
-    response = await client.process_query(message.content, history=[])
+    message_history = cl.user_session.get("message_history", [])
+    message_history.append({"role": "user", "content": message.content})
+    msg = cl.Message(content="")
 
-    # Send a response back to the user
-    await cl.Message(
-        content=response,
-    ).send()
+    max_history_length = 10
+    stream = await client.process_query(message.content, history=message_history[-max_history_length:])
+
+    for part in stream:
+        if token := part.message.content or "":
+            await msg.stream_token(token)
+
+    message_history.append({"role": "assistant", "content": msg.content})
+    await msg.update()
