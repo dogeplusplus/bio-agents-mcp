@@ -22,17 +22,17 @@ setup-env:
 .PHONY: build
 build:
 	@echo "Building all Docker images..."
-	docker-compose -f $(DOCKER_COMPOSE_FILE) build
+	docker-compose build
 
 .PHONY: up
 up:
 	@echo "Starting all services..."
-	docker-compose -f $(DOCKER_COMPOSE_FILE) up -d
+	docker-compose up -d
 
 .PHONY: down
 down:
 	@echo "Stopping all services..."
-	docker-compose -f $(DOCKER_COMPOSE_FILE) down
+	docker-compose down
 
 .PHONY: restart
 restart: down up
