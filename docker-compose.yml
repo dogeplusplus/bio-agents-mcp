@@ -19,8 +19,12 @@ services:
   ollama:
     image: ollama/ollama:latest
     runtime: nvidia
+    env_file:
+      - .env.docker
+    environment:
+      - OLLAMA_MODELS=/.ollama/models
     ports:
-      - "11435:11435"
+      - "11435:11434"
     deploy:
       resources:
         reservations:
@@ -29,7 +33,29 @@ services:
               count: 1
               capabilities: [gpu]
     volumes:
-      - /usr/share/ollama/.ollama:/usr/share/ollama/.ollama
+      - ollama_models:/.ollama
+
+  llm-client:
+    build:
+      context: ./llm-client
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - ollama
+      - pdb-server
+      - chembl-server
+    environment:
+      - OLLAMA_HOST=ollama
+      - PDB_MCP_HOST=pdb-server
+      - CHEMBL_MCP_HOST=chembl-server
 
 volumes:
-  ollama_data:
+  ollama_models:
+    driver: local
+    driver_opts:
+      type: none
+      device: /usr/share/ollama/.ollama
+      o: bind
