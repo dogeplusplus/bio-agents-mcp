@@ -23,8 +23,8 @@ services:
       - .env.docker
     environment:
       - OLLAMA_MODELS=/.ollama/models
-    ports:
-      - "11435:11434"
+    expose:
+      - "11434"
     deploy:
       resources:
         reservations:
