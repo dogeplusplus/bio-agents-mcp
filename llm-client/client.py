@@ -1,13 +1,14 @@
+import json
+import aiohttp
 import asyncio
 import logging
 from contextlib import AsyncExitStack
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from dotenv import find_dotenv, load_dotenv
 from hydra import compose, initialize
 from mcp import ClientSession
 from mcp.client.sse import sse_client
-from ollama import chat
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -21,14 +22,26 @@ class OllamaClient:
         self.model = model
         self.base_url = base_url
 
-    def send_message(self, messages: List[str], tools: Optional[list] = None, stream: bool = False):
-        stream = chat(
-            model=self.model,
-            tools=tools,
-            messages=messages,
-            stream=stream,
-        )
-        return stream
+    async def send_message(self, messages: List[str], tools: Optional[list] = None, stream: bool = False):
+        # TODO: Figure out how to do the tool calling with the ollama docker instead of doing it here
+        # or do it here and send the tool results to the docker image
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{self.base_url}/api/chat",
+                json={
+                    "model": self.model,
+                    "messages": messages,
+                    "tools": tools,
+                    "stream": stream
+                }
+            ) as response:
+                if stream:
+                    async for line in response.content:
+                        if line:
+                            yield json.loads(line)
+                else:
+                    result = await response.json()
+                    yield result
 
 
 def ollama_tool_conversion(tool):
@@ -75,6 +88,33 @@ class MCPClient:
             ]
             self.available_tools.extend(server_tools)
 
+    async def call_tools(self, messages: List[Dict[str, str]]):
+        tools = [ollama_tool_conversion(tool) for tool in self.available_tools]
+        async for call in self.llm.send_message(messages, tools=tools):
+            response = call
+
+        message = response["message"]
+        if "tool_calls" in message:
+            for tool_call in message["tool_calls"]:
+                function = tool_call["function"]
+                tool_name = function["name"]
+                tool_args = function["arguments"]
+
+                # Try each session until we find one that has the tool
+                for session in self.sessions.values():
+                    try:
+                        logger.info(f"Calling {tool_name} with: {tool_args}")
+                        result = await session.call_tool(tool_name, tool_args)
+                        messages.append(
+                            {"role": "system",
+                                "content": result.content[0].text[:10000]}
+                        )
+                        logger.info(f"message: {messages[-1]}")
+                    except Exception as e:
+                        logger.error(f"Error calling tool {tool_name}: {e}")
+
+        return messages
+
     async def process_query(self, query: str, history: List[str] = []) -> str:
         messages = [
             {
@@ -86,7 +126,8 @@ class MCPClient:
 
         for message in history:
             messages.append(
-                {"role": message["role"], "content": message["content"]})
+                {"role": message["role"], "content": message["content"]}
+            )
 
         messages.extend(
             [
@@ -106,28 +147,8 @@ class MCPClient:
             ]
         )
 
-        tools = [ollama_tool_conversion(tool) for tool in self.available_tools]
-        response = self.llm.send_message(messages, tools=tools)
-
-        message = response.message
-        if message.tool_calls:
-            for tool_call in message.tool_calls:
-                function = tool_call.function
-                tool_name = function.name
-                tool_args = function.arguments
-
-                # Try each session until we find one that has the tool
-                for session in self.sessions.values():
-                    try:
-                        result = await session.call_tool(tool_name, tool_args)
-                        messages.append(
-                            {"role": "system",
-                                "content": result.content[0].text[:10000]}
-                        )
-                    except Exception as e:
-                        logger.error(f"Error calling tool {tool_name}: {e}")
-
-        response = self.llm.send_message(messages, stream=True)
+        tool_responses = await self.call_tools(messages)
+        response = self.llm.send_message(tool_responses, stream=True)
         return response
 
     async def chat_loop(self):

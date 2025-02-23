@@ -21,7 +21,7 @@ A natural language interface for querying biological and chemical data through P
 1. Set environment variables in `.env`:
 ```bash
 OLLAMA_HOST=localhost
-OLLAMA_PORT=11435
+OLLAMA_PORT=11434
 PDB_MCP_HOST=localhost
 PDB_MCP_PORT=8080
 CHEMBL_MCP_HOST=localhost

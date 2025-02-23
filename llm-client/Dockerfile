@@ -18,7 +18,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Reset the entrypoint, don't invoke `uv`
-ENTRYPOINT []
+# Expose the Chainlit port
+EXPOSE 8000
 
-CMD ["uv", "run", "client.py"]
+# Run Chainlit instead of the terminal client
+CMD ["chainlit", "run", "chainlit_ui.py", "--host", "0.0.0.0", "--port", "8000"]

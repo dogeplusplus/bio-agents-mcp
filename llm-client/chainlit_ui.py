@@ -22,16 +22,18 @@ async def chat_profile(current_user: cl.User):
     return [
         cl.ChatProfile(
             name="Default Profile",
-            icon="https://picsum.photos/250",
+            icon="https://picsum.photos/56",
             markdown_description="This is the default profile.",
             starters=[
                 cl.Starter(
                     label="PDB Structure",
                     message="Can you get me the structure for 1HR7 assembly 1?",
+                    icon="🧬"
                 ),
                 cl.Starter(
                     label="Pubmed Annotations",
                     message="Can you get me the pubmed annotations for 7U7N?",
+                    icon="📚"
                 ),
             ],
         )
@@ -62,8 +64,8 @@ async def main(message: cl.Message):
     max_history_length = 10
     stream = await client.process_query(message.content, history=message_history[-max_history_length:])
 
-    for part in stream:
-        if token := part.message.content or "":
+    async for part in stream:
+        if token := part["message"]["content"] or "":
             await msg.stream_token(token)
 
     message_history.append({"role": "assistant", "content": msg.content})
