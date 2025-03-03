@@ -22,18 +22,16 @@ async def chat_profile(current_user: cl.User):
     return [
         cl.ChatProfile(
             name="Default Profile",
-            icon="https://picsum.photos/56",
+            icon="https://picsum.photos/250",
             markdown_description="This is the default profile.",
             starters=[
                 cl.Starter(
                     label="PDB Structure",
                     message="Can you get me the structure for 1HR7 assembly 1?",
-                    icon="🧬"
                 ),
                 cl.Starter(
                     label="Pubmed Annotations",
                     message="Can you get me the pubmed annotations for 7U7N?",
-                    icon="📚"
                 ),
             ],
         )

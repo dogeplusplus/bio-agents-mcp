@@ -6,6 +6,6 @@ mcp:
     pdb:
       host: ${oc.env:PDB_MCP_HOST}
       port: ${oc.env:PDB_MCP_PORT}
-    chembl:
-      host: ${oc.env:CHEMBL_MCP_HOST}
-      port: ${oc.env:CHEMBL_MCP_PORT}
+    # chembl:
+    #   host: ${oc.env:CHEMBL_MCP_HOST}
+    #   port: ${oc.env:CHEMBL_MCP_PORT}

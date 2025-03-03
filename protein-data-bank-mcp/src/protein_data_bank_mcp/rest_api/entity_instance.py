@@ -1,7 +1,6 @@
 from typing import List
-
 from mcp import types
-from protein_data_bank_mcp.utils import fetch_data
+from protein_data_bank_mcp.rest_api.utils import fetch_data
 
 
 async def branched_entity_instance(

@@ -22,7 +22,9 @@ class OllamaClient:
         self.model = model
         self.base_url = base_url
 
-    async def send_message(self, messages: List[str], tools: Optional[list] = None, stream: bool = False):
+    async def send_message(
+        self, messages: List[str], tools: Optional[list] = None, stream: bool = False
+    ):
         # TODO: Figure out how to do the tool calling with the ollama docker instead of doing it here
         # or do it here and send the tool results to the docker image
         async with aiohttp.ClientSession() as session:
@@ -32,8 +34,8 @@ class OllamaClient:
                     "model": self.model,
                     "messages": messages,
                     "tools": tools,
-                    "stream": stream
-                }
+                    "stream": stream,
+                },
             ) as response:
                 if stream:
                     async for line in response.content:
@@ -101,17 +103,22 @@ class MCPClient:
                 tool_args = function["arguments"]
 
                 # Try each session until we find one that has the tool
-                for session in self.sessions.values():
+                for session_name, session in self.sessions.items():
                     try:
-                        logger.info(f"Calling {tool_name} with: {tool_args}")
+                        logger.info(
+                            f"Session: {session_name}, Tool: {tool_name}, Args: {tool_args}"
+                        )
                         result = await session.call_tool(tool_name, tool_args)
                         messages.append(
-                            {"role": "system",
-                                "content": result.content[0].text[:10000]}
+                            {
+                                "role": "system",
+                                "content": result.content[0].text[:10000],
+                            }
                         )
-                        logger.info(f"message: {messages[-1]}")
                     except Exception as e:
-                        logger.error(f"Error calling tool {tool_name}: {e}")
+                        logger.error(
+                            f"Error calling Session: {session_name}, Tool: {tool_name}, Error: {e}"
+                        )
 
         return messages
 
@@ -122,12 +129,10 @@ class MCPClient:
                 "content": "The following is the history of the conversation:",
             },
         ]
-        logger.info(f"History of the conversation: {history}")
 
         for message in history:
             messages.append(
-                {"role": message["role"], "content": message["content"]}
-            )
+                {"role": message["role"], "content": message["content"]})
 
         messages.extend(
             [
@@ -137,7 +142,9 @@ class MCPClient:
                     You have access to tools for protein data bank and Chembl.
                     Use the API tools to extract the relevant information.
                     Fill in missing arguments with sensible values if the user
-                    hasn't provided them such as the assembly_id.
+                    hasn't provided them such as the assembly_id. A lot of the biological
+                    questions can be obtained using the structure by providing the entry_id
+                    and assembly.
                     """,
                 },
                 {
