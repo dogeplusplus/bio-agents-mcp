@@ -10,6 +10,7 @@ dependencies = [
     "mcp>=1.1.2",
     "hydra-core>=1.2.0",
     "python-dotenv>=1.0.1",
+    "biopython>=1.85",
 ]
 
 [build-system]

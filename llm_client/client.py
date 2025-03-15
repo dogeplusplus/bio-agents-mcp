@@ -25,8 +25,6 @@ class OllamaClient:
     async def send_message(
         self, messages: List[str], tools: Optional[list] = None, stream: bool = False
     ):
-        # TODO: Figure out how to do the tool calling with the ollama docker instead of doing it here
-        # or do it here and send the tool results to the docker image
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 f"{self.base_url}/api/chat",
@@ -155,6 +153,7 @@ class MCPClient:
         )
 
         tool_responses = await self.call_tools(messages)
+        logger.info(f"Tool responses: {tool_responses}")
         response = self.llm.send_message(tool_responses, stream=True)
         return response
 

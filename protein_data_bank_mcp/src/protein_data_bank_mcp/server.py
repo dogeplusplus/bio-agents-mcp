@@ -26,6 +26,7 @@ from protein_data_bank_mcp.rest_api.groups import (
     pdb_cluster_data_aggregation_method,
 )
 from protein_data_bank_mcp.rest_api.interface import pairwise_polymeric_interface_description
+from protein_data_bank_mcp.pdb_store.storage import get_residue_chains
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -52,6 +53,7 @@ tools = [
     pdb_cluster_data_aggregation,
     pdb_cluster_data_aggregation_method,
     pairwise_polymeric_interface_description,
+    get_residue_chains,
 ]
 
 for tool in tools:
