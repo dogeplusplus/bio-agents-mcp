@@ -46,3 +46,7 @@ run-chainlit:
 run-client:
 	@echo "Starting LLM client in terminal mode..."
 	cd llm-client && python client.py
+
+.PHONY: targets
+test:
+	pytest

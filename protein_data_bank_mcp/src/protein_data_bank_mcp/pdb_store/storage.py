@@ -42,13 +42,12 @@ class PDBStore:
         self._parser = PDBParser()
 
     def download_pdb(self, entry_id: str):
-        self._pdb_list.retrieve_pdb_file(entry_id, pdir=self.folder, overwrite=True)
+        self._pdb_list.retrieve_pdb_file(entry_id, pdir=self.folder, overwrite=True, file_format="pdb")
 
     def get_pdb(self, entry_id: str):
-        pdb_path = self.folder / f"{entry_id}.pdb"
+        pdb_path = self.folder / f"pdb{entry_id}.ent"
         if not pdb_path.exists():
             self.download_pdb(entry_id)
-
         return pdb_path
 
     def get_residue_chains(self, entry_id: str) -> Dict[str, str]:
@@ -57,7 +56,7 @@ class PDBStore:
 
         chains = {}
         for chain in structure.get_chains():
-            residues = "".join([PROTEIN_COMMON_THREE_TO_ONE[x.resname] for x in chain.get_residues()])
+            residues = "".join([PROTEIN_COMMON_THREE_TO_ONE.get(x.resname, "X") for x in chain.get_residues()])
             chains[chain.id] = residues
 
         return chains
