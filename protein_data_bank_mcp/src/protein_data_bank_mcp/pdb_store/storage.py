@@ -7,31 +7,29 @@ from pathlib import Path
 
 
 PROTEIN_COMMON_ONE_TO_THREE = {
-    'A': 'ALA',
-    'R': 'ARG',
-    'N': 'ASN',
-    'D': 'ASP',
-    'C': 'CYS',
-    'Q': 'GLN',
-    'E': 'GLU',
-    'G': 'GLY',
-    'H': 'HIS',
-    'I': 'ILE',
-    'L': 'LEU',
-    'K': 'LYS',
-    'M': 'MET',
-    'F': 'PHE',
-    'P': 'PRO',
-    'S': 'SER',
-    'T': 'THR',
-    'W': 'TRP',
-    'Y': 'TYR',
-    'V': 'VAL',
+    "A": "ALA",
+    "R": "ARG",
+    "N": "ASN",
+    "D": "ASP",
+    "C": "CYS",
+    "Q": "GLN",
+    "E": "GLU",
+    "G": "GLY",
+    "H": "HIS",
+    "I": "ILE",
+    "L": "LEU",
+    "K": "LYS",
+    "M": "MET",
+    "F": "PHE",
+    "P": "PRO",
+    "S": "SER",
+    "T": "THR",
+    "W": "TRP",
+    "Y": "TYR",
+    "V": "VAL",
 }
 
-PROTEIN_COMMON_THREE_TO_ONE = {
-    v: k for k, v in PROTEIN_COMMON_ONE_TO_THREE.items()
-}
+PROTEIN_COMMON_THREE_TO_ONE = {v: k for k, v in PROTEIN_COMMON_ONE_TO_THREE.items()}
 
 
 class PDBStore:
@@ -42,7 +40,9 @@ class PDBStore:
         self._parser = PDBParser()
 
     def download_pdb(self, entry_id: str):
-        self._pdb_list.retrieve_pdb_file(entry_id, pdir=self.folder, overwrite=True, file_format="pdb")
+        self._pdb_list.retrieve_pdb_file(
+            entry_id, pdir=self.folder, overwrite=True, file_format="pdb"
+        )
 
     def get_pdb(self, entry_id: str):
         pdb_path = self.folder / f"pdb{entry_id}.ent"
@@ -56,7 +56,12 @@ class PDBStore:
 
         chains = {}
         for chain in structure.get_chains():
-            residues = "".join([PROTEIN_COMMON_THREE_TO_ONE.get(x.resname, "X") for x in chain.get_residues()])
+            residues = "".join(
+                [
+                    PROTEIN_COMMON_THREE_TO_ONE.get(x.resname, "X")
+                    for x in chain.get_residues()
+                ]
+            )
             chains[chain.id] = residues
 
         return chains
