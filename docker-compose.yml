@@ -1,7 +1,7 @@
 services:
   pdb-server:
     build:
-      context: ./protein-data-bank-mcp
+      context: ./protein_data_bank_mcp
       dockerfile: Dockerfile
     env_file:
       - .env.docker
@@ -9,7 +9,7 @@ services:
       - "8080:8080"
   chembl-server:
     build:
-      context: ./chembl-mcp
+      context: ./chembl_mcp
       dockerfile: Dockerfile
     env_file:
       - .env.docker
@@ -37,7 +37,7 @@ services:
 
   llm-client:
     build:
-      context: ./llm-client
+      context: ./llm_client
       dockerfile: Dockerfile
     env_file:
       - .env
