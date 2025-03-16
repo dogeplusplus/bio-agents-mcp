@@ -22,17 +22,17 @@ setup-env:
 .PHONY: build
 build:
 	@echo "Building all Docker images..."
-	docker-compose build
+	docker compose build
 
 .PHONY: up
 up:
 	@echo "Starting all services..."
-	docker-compose up -d
+	docker compose up -d
 
 .PHONY: down
 down:
 	@echo "Stopping all services..."
-	docker-compose down
+	docker compose down
 
 .PHONY: restart
 restart: down up
@@ -40,12 +40,12 @@ restart: down up
 .PHONY: run-chainlit
 run-chainlit:
 	@echo "Starting Chainlit UI..."
-	cd llm-client && chainlit run chainlit_ui.py
+	cd llm_client && chainlit run chainlit_ui.py
 
 .PHONY: run-client
 run-client:
 	@echo "Starting LLM client in terminal mode..."
-	cd llm-client && python client.py
+	cd llm_client && python client.py
 
 .PHONY: targets
 test:

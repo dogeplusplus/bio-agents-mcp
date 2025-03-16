@@ -1,9 +1,14 @@
 import json
+import logging
 
 from mcp import types
 from typing import Dict
 from Bio.PDB import PDBList, PDBParser
 from pathlib import Path
+
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 PROTEIN_COMMON_ONE_TO_THREE = {
@@ -45,7 +50,7 @@ class PDBStore:
         )
 
     def get_pdb(self, entry_id: str):
-        pdb_path = self.folder / f"pdb{entry_id}.ent"
+        pdb_path = self.folder / f"pdb{entry_id.lower()}.ent"
         if not pdb_path.exists():
             self.download_pdb(entry_id)
         return pdb_path

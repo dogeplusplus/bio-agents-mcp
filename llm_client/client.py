@@ -107,11 +107,17 @@ class MCPClient:
                             f"Session: {session_name}, Tool: {tool_name}, Args: {tool_args}"
                         )
                         result = await session.call_tool(tool_name, tool_args)
-                        messages.append(
-                            {
-                                "role": "system",
-                                "content": result.content[0].text[:10000],
-                            }
+                        messages.extend(
+                            [
+                                {
+                                    "role": "system",
+                                    "content": f"Calling tool {tool_name}, Args: {tool_args}"
+                                },
+                                {
+                                    "role": "system",
+                                    "content": result.content[0].text[:10000],
+                                }
+                            ]
                         )
                     except Exception as e:
                         logger.error(
@@ -124,7 +130,14 @@ class MCPClient:
         messages = [
             {
                 "role": "system",
-                "content": "The following is the history of the conversation:",
+                "content": """
+                You have access to tools for protein data bank and Chembl.
+                Use the API tools to extract the relevant information.
+                Fill in missing arguments with sensible values if the user
+                hasn't provided them such as the assembly_id. A lot of the biological
+                questions can be obtained using the structure by providing the entry_id
+                and assembly.
+                """,
             },
         ]
 
@@ -132,19 +145,11 @@ class MCPClient:
             messages.append(
                 {"role": message["role"], "content": message["content"]})
 
+        # Remove duplicate original system prompt if present
+        messages = list(set(messages))
+
         messages.extend(
             [
-                {
-                    "role": "system",
-                    "content": """
-                    You have access to tools for protein data bank and Chembl.
-                    Use the API tools to extract the relevant information.
-                    Fill in missing arguments with sensible values if the user
-                    hasn't provided them such as the assembly_id. A lot of the biological
-                    questions can be obtained using the structure by providing the entry_id
-                    and assembly.
-                    """,
-                },
                 {
                     "role": "user",
                     "content": query,
@@ -152,8 +157,13 @@ class MCPClient:
             ]
         )
 
+        extra_prompt = {
+            "role": "system",
+            "content": "Using the above content and the user query, now answer the query.",
+        }
+
         tool_responses = await self.call_tools(messages)
-        logger.info(f"Tool responses: {tool_responses}")
+        logger.info(f"Tool responses: {json.dumps(tool_responses + [extra_prompt], indent=2)}")
         response = self.llm.send_message(tool_responses, stream=True)
         return response
 
