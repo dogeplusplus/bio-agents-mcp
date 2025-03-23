@@ -21,20 +21,43 @@ client = MCPClient(llm)
 async def chat_profile(current_user: cl.User):
     return [
         cl.ChatProfile(
-            name="Default Profile",
-            icon="https://picsum.photos/250",
-            markdown_description="This is the default profile.",
+            name="Protein Structure",
+            icon="🧬",
+            markdown_description="Query protein structures and assemblies from PDB.",
             starters=[
                 cl.Starter(
-                    label="PDB Structure",
-                    message="Can you get me the structure for 1HR7 assembly 1?",
+                    label="Structure Info",
+                    message="Can you get me the structure for 1HR7?",
                 ),
                 cl.Starter(
-                    label="Pubmed Annotations",
-                    message="Can you get me the pubmed annotations for 7U7N?",
+                    label="Assembly Info",
+                    message="Can you get me the structural assembly description for 1HR7 assembly 1?",
+                ),
+                cl.Starter(
+                    label="Residue Chains",
+                    message="What are the residue chains in 1FAT?",
                 ),
             ],
-        )
+        ),
+        cl.ChatProfile(
+            name="Chemical Data",
+            icon="⚗️",
+            markdown_description="Query chemical compounds and drug data.",
+            starters=[
+                cl.Starter(
+                    label="Chemical Component",
+                    message="Can you get me information about the chemical component NAG?",
+                ),
+                cl.Starter(
+                    label="DrugBank Annotations",
+                    message="What are the DrugBank annotations for ATP?",
+                ),
+                cl.Starter(
+                    label="Find Molecule",
+                    message="Find information about the molecule Aspirin",
+                ),
+            ],
+        ),
     ]
 
 

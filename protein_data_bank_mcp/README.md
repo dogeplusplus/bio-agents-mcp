@@ -8,6 +8,7 @@ Micro-service for accessing the Protein Data Bank (PDB) API through the MCP prot
 - Structured data retrieval for proteins, assemblies, and chemical components
 - Support for annotation data from DrugBank, UniProt, and PubMed
 - Built on FastMCP framework with async/await support
+- Local PDB file storage and parsing capabilities
 
 ## Setup
 
